@@ -1,20 +1,27 @@
 module.exports = [{
     name: "Google Maps",
     category: "Main maps",
-    domain: "google.co.jp",
+    domain: "www.google.com",
     urlPattern: /google.*maps/,
     getUrl(lat, lon, zoom) {
-      return 'https://www.google.co.jp/maps/@' + lat + ',' + lon + ',' + zoom + 'z';
+      return 'https://www.google.com/maps/@' + lat + ',' + lon + ',' + zoom + 'z';
     },
     getLatLonZoom(url) {
-      if (url.match(/(google).*(maps).*z/)) {
-        const [, lat, lon, zoom] = url.match(/@(-?\d[0-9.]*),(-?\d[0-9.]*),(\d{1,2})[.z]/);
+
+      if (url.match(/google.*maps.*,[0-9.]*z/)) {
+		const [, lat, lon, zoom] = url.match(/@(-?\d[0-9.]*),(-?\d[0-9.]*),(\d{1,2})[.z]/);
+
         return [lat, lon, zoom];
-      } else if (url.match(/(google).*(maps).*(1e3)/)) {
-        let [, lat, lon, zoom] = url.match(/@(-?\d[0-9.]*),(-?\d[0-9.]*),(\d[0-9.]*)[.m]/);
-        zoom = -1.4436 * Math.log(zoom) + 26.871;
+      } else if (url.match(/google.*maps.*m\//)) {
+        let [, lat, lon, zoom] = url.match(/@(-?\d[0-9.]*),(-?\d[0-9.]*),(\d[0-9.]*)[m]/);
+        zoom = Math.round(-1.4436 * Math.log(zoom) + 26.871);
         return [lat, lon, zoom];
-      }
+      } else if (url.match(/google.*maps.*y,/)) {
+        let [, lat, lon, zoom] = url.match(/@(-?\d[0-9.]*),(-?\d[0-9.]*),([0-9]*)[a]/);
+        zoom = Math.round(-1.44 * Math.log(zoom) + 27.5);
+        return [lat, lon, zoom];
+		}
+		
     },
   },
   {
@@ -59,10 +66,10 @@ module.exports = [{
   {
     name: "OpenStreetCam",
     category: "Main maps",
-    domain: "www.openstreetcam.org",
-    urlPattern: /www\.openstreetcam\.org/,
+    domain: "openstreetcam.org",
+    urlPattern: /openstreetcam\.org/,
     getUrl(lat, lon, zoom) {
-      return 'https://www.openstreetcam.org/map/@' + lat + ',' + lon + ',' + zoom + 'z';
+      return 'https://openstreetcam.org/map/@' + lat + ',' + lon + ',' + zoom + 'z';
     },
     getLatLonZoom(url) {
       const [, lat, lon, zoom] = url.match(/@(-?\d[0-9.]*),(-?\d[0-9.]*),(\d{1,2})/);
@@ -96,6 +103,19 @@ module.exports = [{
     },
   },
   {
+    name: "Qwant Maps",
+    category: "Main maps",
+    domain: "qwant.com",
+    urlPattern: /www\.qwant\.com/,
+    getUrl(lat, lon, zoom) {
+      return 'https://www.qwant.com/maps/#map=' + zoom + '/' + lat + '/' + lon;
+    },
+    getLatLonZoom(url) {
+      const [, zoom, lat, lon] = url.match(/#map=(\d{1,2})[0-9.]*\/(-?\d[0-9.]*)\/(-?\d[0-9.]*)/);
+      return [lat, lon, zoom];
+    },
+  },
+  {
     name: "Overpass-turbo",
     category: "OSM tools",
     domain: "overpass-turbo.eu",
@@ -107,8 +127,13 @@ module.exports = [{
     name: "Osmose",
     category: "OSM tools",
     domain: "osmose.openstreetmap.fr",
+    urlPattern: /osmose\.openstreetmap\.fr/,
     getUrl(lat, lon, zoom) {
       return 'http://osmose.openstreetmap.fr/map/#zoom=' + zoom + '&lat=' + lat + '&lon=' + lon;
+    },
+    getLatLonZoom(url) {
+      const [, zoom, lat, lon] = url.match(/#zoom=(\d{1,2})&lat=(-?\d[0-9.]*)&lon=(-?\d[0-9.]*)/);
+      return [lat, lon, zoom];
     },
   },
   {
@@ -160,28 +185,25 @@ module.exports = [{
       return 'https://hiking.waymarkedtrails.org/#?map=' + zoom + '!' + lat + '!' + lon;
     },
   },
-  {
-    name: "Ingress Intel map",
-    category: "Other maps",
-    domain: "intel.ingress.com",
+   {
+    name: "BigMap 2",
+    category: "OSM tools",
+    domain: "osmz.ru",
     getUrl(lat, lon, zoom) {
-      return 'https://intel.ingress.com/intel?ll=' + lat + ',' + lon + '&z=' + zoom;
+      return 'http://bigmap.osmz.ru/index.html#map=' + zoom + '/' + lat + '/' + lon;
     },
   },
-  {
-    name: "OSM.de",
-    category: "Other maps",
-    domain: "www.openstreetmap.de",
+ {
+    name: "Pic4Carto",
+    category: "OSM tools",
+    domain: "pavie.info",
+    urlPattern: /projets\.pavie\.info\/pic4carto\/index\.html/,
     getUrl(lat, lon, zoom) {
-      return 'https://www.openstreetmap.de/karte.html?zoom=' + zoom + '&lat=' + lat + '&lon=' + lon;
+      return 'http://projets.pavie.info/pic4carto/index.html?#' + zoom + '/' + lat + '/' + lon;
     },
-  },
-  {
-    name: "Yahoo Map JP",
-    category: "Other maps",
-    domain: "map.yahoo.co.jp",
-    getUrl(lat, lon, zoom) {
-      return 'https://map.yahoo.co.jp/maps?lat=' + lat + '&lon=' + lon + '&z=' + zoom;
+    getLatLonZoom(url) {
+      const [, zoom, lat, lon] = url.match(/#(\d{1,2})\/(-?\d[0-9.]*)\/(-?\d[0-9.]*)/);
+      return [lat, lon, zoom];
     },
   },
   {
@@ -190,6 +212,14 @@ module.exports = [{
     domain: "www.bing.com",
     getUrl(lat, lon, zoom) {
       return 'https://www.bing.com/maps?cp=' + lat + '~' + lon + '&lvl=' + zoom;
+    },
+  },
+  {
+    name: "Yahoo Map JP",
+    category: "Other maps",
+    domain: "map.yahoo.co.jp",
+    getUrl(lat, lon, zoom) {
+      return 'https://map.yahoo.co.jp/maps?lat=' + lat + '&lon=' + lon + '&z=' + zoom;
     },
   },
   {
@@ -208,4 +238,95 @@ module.exports = [{
       return 'https://www.mapion.co.jp/m2/' + lat + ',' + lon + ',' + zoom;
     },
   },
+  {
+    name: "OSM.de",
+    category: "Other maps",
+    domain: "www.openstreetmap.de",
+    getUrl(lat, lon, zoom) {
+      return 'https://www.openstreetmap.de/karte.html?zoom=' + zoom + '&lat=' + lat + '&lon=' + lon;
+    },
+  },
+  {
+    name: "IGN GeoPortal(FR)",
+    category: "Other maps",
+    domain: "geoportail.gouv.fr",
+    getUrl(lat, lon, zoom) {
+      return 'https://www.geoportail.gouv.fr/carte?c=' + lon + ',' + lat + '&z=' + zoom + '&l0=GEOGRAPHICALGRIDSYSTEMS.MAPS.SCAN25TOUR.CV::GEOPORTAIL:OGC:WMTS(1)&permalink=yes';
+    },
+  },
+  {
+    name: "Ingress Intel map",
+    category: "Other maps",
+    domain: "intel.ingress.com",
+    getUrl(lat, lon, zoom) {
+      return 'https://intel.ingress.com/intel?ll=' + lat + ',' + lon + '&z=' + zoom;
+    },
+  },
+  {
+    name: "flightradar24",
+    category: "Other maps",
+    domain: "flightradar24.com",
+    urlPattern: /www\.flightradar24\.com/,
+    getUrl(lat, lon, zoom) {
+      return 'https://www.flightradar24.com/' + lat + ',' + lon + '/' + Math.round(zoom);
+    },
+    getLatLonZoom(url) {
+      const [, lat, lon, zoom] = url.match(/(-?\d[0-9.]*),(-?\d[0-9.]*)\/(\d{1,2})/);
+      return [lat, lon, zoom];
+    },
+  },
+  {
+    name: "MarineTraffic",
+    category: "Other maps",
+    domain: "marinetraffic.com",
+    urlPattern: /www\.marinetraffic\.com/,
+    getUrl(lat, lon, zoom) {
+      return 'https://www.marinetraffic.com/en/ais/home/centerx:' + lon + '/centery:' + lat + '/zoom:' + zoom;
+    },
+    getLatLonZoom(url) {
+      const [, lon, lat, zoom] = url.match(/centerx:(-?\d[0-9.]*)\/centery:(-?\d[0-9.]*)\/zoom:(\d{1,2})/);
+      return [lat, lon, zoom];
+    },
+  },
+  {
+    name: "Windy.com",
+    category: "Other maps",
+    domain: "windy.com",
+    urlPattern: /www\.windy\.com/,
+    getUrl(lat, lon, zoom) {
+      return 'https://www.windy.com/?' + lat + ',' + lon + ',' + Math.round(zoom) + ',i:pressure';
+    },
+    getLatLonZoom(url) {
+      const [, lat, lon, zoom] = url.match(/(-?\d[0-9.]*),(-?\d[0-9.]*),(\d{1,2})/);
+      return [lat, lon, zoom];
+    },
+  },
+   {
+    name: "earth",
+    category: "Other maps",
+    domain: "earth.nullschool.net",
+    urlPattern: /earth\.nullschool\.net/,
+    getUrl(lat, lon, zoom) {
+      return 'https://earth.nullschool.net/#current/wind/surface/level/orthographic=' + lon + ',' + lat + ',' + 11.1*zoom**3.12;
+    },
+    getLatLonZoom(url) {
+      let [, lon, lat, zoom] = url.match(/orthographic=(-?\d[0-9.]*),(-?\d[0-9.]*),(\d[0-9]*)/);
+	  zoom = Math.round((zoom/11.1)**(1/3.12));
+      return [lat, lon, zoom];
+    },
+  },
+   {
+    name: "map.orhyginal",
+    category: "Other maps",
+    domain: "orhyginal.fr",
+    urlPattern: /map\.orhyginal\.fr/,
+    getUrl(lat, lon, zoom) {
+      return 'http://map.orhyginal.fr/#' + zoom + '/' + lat + '/' + lon;
+    },
+    getLatLonZoom(url) {
+      const [, zoom, lat, lon] = url.match(/#(\d[0-9]*)\/(-?\d[0-9.]*)\/(-?\d[0-9.]*)/);
+      return [lat, lon, zoom];
+    },
+  },
+ 
 ];
